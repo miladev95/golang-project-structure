@@ -1,0 +1,215 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    MODULAR DI CONTAINER STRUCTURE                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ENTRY POINT: cmd/server/main.go                                              │
+│ ┌────────────────────────────────────────────────────────────────────────┐  │
+│ │ 1. Create Container: container := di.NewContainer()                   │  │
+│ │ 2. Register Modules:                                                  │  │
+│ │    container.                                                         │  │
+│ │    .RegisterModule(modules.NewUserModule())                           │  │
+│ │    .RegisterModule(modules.NewProductModule())                        │  │
+│ │ 3. Setup: container.Setup(cfg)                                        │  │
+│ │ 4. Get Handlers and register routes                                   │  │
+│ └────────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                    ┌─────────────────┴──────────────────┐
+                    ▼                                    ▼
+    ┌─────────────────────────────────┐    ┌──────────────────────────────┐
+    │   CONTAINER INITIALIZATION      │    │  CORE PROVIDERS              │
+    │ internal/di/container.go        │    │ internal/di/providers.go     │
+    │ ┌───────────────────────────┐   │    │ ┌──────────────────────────┐ │
+    │ │ Type: Container           │   │    │ │ ProvideConfig()          │ │
+    │ │ Methods:                  │   │    │ │ ProvideDatabase()        │ │
+    │ │ • NewContainer()          │   │    │ │                          │ │
+    │ │ • RegisterModule()        │   │    │ └──────────────────────────┘ │
+    │ │ • Setup()                 │   │    └──────────────────────────────┘
+    │ │ • GetUserHandler()        │   │
+    │ │ • GetProductHandler()     │   │
+    │ └───────────────────────────┘   │
+    └─────────────────────────────────┘
+                    │
+                    ▼
+    ┌──────────────────────────────────────────────────────┐
+    │        MODULE SYSTEM: internal/di/modules/           │
+    │ ┌──────────────────┐        ┌───────────────────┐   │
+    │ │ module.go        │        │ registry.go       │   │
+    │ │ ────────────┐    │        │ ────────────┐     │   │
+    │ │ Type Module│    │        │ Type        │     │   │
+    │ │ interface: │    │        │ Registry    │     │   │
+    │ │ • Name()   │    │        │             │     │   │
+    │ │ • Register()    │        │ Methods:    │     │   │
+    │ └──────────────────┘        │ • Register()      │   │
+    │                             │ • Setup()         │   │
+    │                             │ • GetModules()    │   │
+    │                             └───────────────────┘   │
+    └──────────────────────────────────────────────────────┘
+                    │
+        ┌───────────┴───────────┐
+        ▼                       ▼
+╔═══════════════════════╗  ╔═══════════════════════╗
+║  USER MODULE          ║  ║  PRODUCT MODULE       ║
+║ user_module.go        ║  ║ product_module.go     ║
+╠═══════════════════════╣  ╠═══════════════════════╣
+║ Register():           ║  ║ Register():           ║
+║                       ║  ║                       ║
+║ 1. UserRepository     ║  ║ 1. ProductRepository  ║
+║    ↓ depends on       ║  ║    ↓ depends on       ║
+║    *gorm.DB           ║  ║    *gorm.DB           ║
+║                       ║  ║                       ║
+║ 2. UserService        ║  ║ 2. ProductService     ║
+║    ↓ depends on       ║  ║    ↓ depends on       ║
+║    UserRepository     ║  ║    ProductRepository  ║
+║                       ║  ║                       ║
+║ 3. UserHandler        ║  ║ 3. ProductHandler     ║
+║    ↓ depends on       ║  ║    ↓ depends on       ║
+║    UserService        ║  ║    ProductService     ║
+╚═══════════════════════╝  ╚═══════════════════════╝
+        │                       │
+        │    Registered to      │
+        │    Dig Container      │
+        └───────────┬───────────┘
+                    ▼
+    ╔══════════════════════════════════╗
+    ║  DIG CONTAINER (Dependency Graph)║
+    ║ ┌──────────────────────────────┐ ║
+    ║ │ Config                       │ ║
+    ║ │ Database (gorm.DB)           │ ║
+    ║ │ UserRepository               │ ║
+    ║ │ UserService                  │ ║
+    ║ │ UserHandler                  │ ║
+    ║ │ ProductRepository            │ ║
+    ║ │ ProductService               │ ║
+    ║ │ ProductHandler               │ ║
+    ║ └──────────────────────────────┘ ║
+    ╚══════════════════════════════════╝
+
+
+DEPENDENCY RESOLUTION EXAMPLE:
+═════════════════════════════════════════════════════════════════════════════
+
+When: container.GetUserHandler()
+
+DIG resolves:
+    UserHandler  
+        ↓ needs UserService
+    UserService
+        ↓ needs UserRepository
+    UserRepository
+        ↓ needs *gorm.DB
+    *gorm.DB (already provided)
+        ↓ returns DB instance
+    Creates UserRepository with DB
+        ↓ returns UserRepository
+    Creates UserService with UserRepository
+        ↓ returns UserService
+    Creates UserHandler with UserService
+        ↓ returns UserHandler
+
+
+LAYER STRUCTURE (per module):
+═════════════════════════════════════════════════════════════════════════════
+
+internal/
+├── models/
+│   ├── user.go          ← Domain Model
+│   └── product.go       ← Domain Model
+│
+├── repositories/
+│   ├── repository.go    ← Interfaces (UserRepository, ProductRepository)
+│   └── postgres/
+│       ├── user_repository.go        ← Implementation
+│       └── product_repository.go     ← Implementation
+│
+├── services/
+│   └── service.go       ← Interfaces + Implementations
+│                        ← (UserService, ProductService)
+│
+├── handlers/
+│   ├── response/
+│   │   └── response.go  ← Response formatting
+│   └── http/
+│       ├── user_handler.go      ← HTTP Handler
+│       └── product_handler.go   ← HTTP Handler
+│
+└── di/
+    ├── container.go        ← Main container
+    ├── providers.go        ← Core providers
+    └── modules/
+        ├── module.go           ← Module interface
+        ├── registry.go         ← Module registry
+        ├── user_module.go      ← User DI configuration
+        └── product_module.go   ← Product DI configuration
+
+
+MODULE LIFECYCLE:
+═════════════════════════════════════════════════════════════════════════════
+
+1. INITIALIZATION
+   container := di.NewContainer()
+   ├── Create new dig.Container
+   └── Create empty ModuleRegistry
+
+2. MODULE REGISTRATION
+   container.RegisterModule(NewUserModule())
+   ├── Add UserModule to registry (not executed)
+   └── Call RegisterModule() again for each module
+
+3. SETUP
+   container.Setup(cfg)
+   ├── Call ProvideConfig() → Register *Config
+   ├── Call ProvideDatabase() → Register *gorm.DB
+   └── Call moduleRegistry.Setup(container)
+       └── For each module:
+           └── module.Register(container)
+               ├── UserModule.Register()
+               │   ├── Provide UserRepository
+               │   ├── Provide UserService
+               │   └── Provide UserHandler
+               └── ProductModule.Register()
+                   ├── Provide ProductRepository
+                   ├── Provide ProductService
+                   └── Provide ProductHandler
+
+4. READY FOR USE
+   container.GetUserHandler()
+   ├── Dig resolves dependency chain
+   └── Returns fully initialized UserHandler
+
+
+ADDING A NEW MODULE:
+═════════════════════════════════════════════════════════════════════════════
+
+Step 1: Create domain layer files
+├── internal/models/order.go
+├── internal/repositories/repository.go (add OrderRepository interface)
+├── internal/repositories/postgres/order_repository.go
+├── internal/services/service.go (add OrderService)
+└── internal/handlers/http/order_handler.go
+
+Step 2: Create module file
+└── internal/di/modules/order_module.go
+
+Step 3: Update main.go
+├── Register module: container.RegisterModule(modules.NewOrderModule())
+├── Get handler: container.GetOrderHandler()
+└── Register routes: orderHandler.RegisterRoutes(router)
+
+Step 4: Add container helper (optional)
+└── Add GetOrderHandler() to container.go
+
+
+KEY BENEFITS:
+═════════════════════════════════════════════════════════════════════════════
+
+✅ Modularity     → Each domain is self-contained
+✅ Scalability    → Add new modules without touching existing code
+✅ Testability    → Mock dependencies per module
+✅ Maintainability→ Clear responsibility boundaries
+✅ Extensibility  → Easy to add layers or implementations
+✅ Separation of  → Clear separation between layers
+   Concerns
+
+

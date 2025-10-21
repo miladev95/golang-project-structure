@@ -1,0 +1,510 @@
+MIGRATIONS FLOW DIAGRAM
+=======================
+
+═══════════════════════════════════════════════════════════════════════════════
+1. STARTUP SEQUENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+  ┌─────────────────┐
+  │  Start Server   │
+  │ go run main.go  │
+  └────────┬────────┘
+           │
+           ▼
+  ┌─────────────────────────┐
+  │ LoadConfig()            │
+  │ - DB_DRIVER             │
+  │ - DB_HOST               │
+  │ - DB_USER               │
+  │ - DB_PASSWORD           │
+  │ - DB_NAME               │
+  └────────┬────────────────┘
+           │
+           ▼
+  ┌──────────────────────┐
+  │ NewContainer()       │
+  │ Setup DI Registry    │
+  └────────┬─────────────┘
+           │
+           ▼
+  ┌──────────────────────┐
+  │ RegisterModule()     │
+  │ - UserModule         │
+  │ - ProductModule      │
+  │ - OrderModule        │
+  └────────┬─────────────┘
+           │
+           ▼
+  ┌──────────────────────┐
+  │ container.Setup()    │
+  │ Creates providers    │
+  └────────┬─────────────┘
+           │
+           ▼
+  ┌──────────────────────────────────────┐
+  │ NewDatabase(cfg)                     │  ◄── CALLED IN MAIN.GO
+  │ ├─ Connect to DB                     │
+  │ ├─ Check connection                  │
+  │ └─ Return *gorm.DB                   │
+  └────────┬─────────────────────────────┘
+           │
+           ▼
+  ┌──────────────────────────────────────┐
+  │ RunMigrations(db)                    │  ◄── CALLED IN MAIN.GO
+  │ Database Schema Creation Starts      │
+  └────────┬─────────────────────────────┘
+           │
+           ▼  [THIS IS THE MIGRATION SECTION]
+  ╔════════════════════════════════════════╗
+  ║  See Section 2: MIGRATION EXECUTION    ║
+  ╚════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+2. MIGRATION EXECUTION
+═══════════════════════════════════════════════════════════════════════════════
+
+  RunMigrations(db *gorm.DB):
+  
+    ┌─────────────────────────────────────┐
+    │ Log: "Running migrations..."        │
+    └────────┬────────────────────────────┘
+             │
+             ▼
+    ┌─────────────────────────────────────────────┐
+    │ Check: HasTable("users")?                   │
+    └────────────────┬────────────────────────────┘
+                     │
+        ┌────────────┴───────────┐
+        │                        │
+        ▼ NO                     ▼ YES
+    ┌──────────────┐         ┌──────────────────┐
+    │ CREATE TABLE │         │ Skip this step   │
+    │ users        │         │ (Already exists) │
+    └─────┬────────┘         └────────┬─────────┘
+          │                           │
+          ▼                           │
+    ┌──────────────────┐              │
+    │ ✅ Table created │              │
+    │ Log message      │              │
+    └─────┬────────────┘              │
+          │                           │
+          └────────────┬──────────────┘
+                       │
+                       ▼
+    ┌──────────────────────────────────────────┐
+    │ Check: HasIndex("users", "email")?       │
+    └────────────┬─────────────────────────────┘
+                 │
+        ┌────────┴──────────┐
+        │                   │
+        ▼ NO                ▼ YES
+    ┌──────────────┐    ┌──────────────────┐
+    │ CREATE INDEX │    │ Skip this step   │
+    │ idx_users... │    │ (Already exists) │
+    └─────┬────────┘    └────────┬─────────┘
+          │                      │
+          ▼                      │
+    ┌──────────────────┐         │
+    │ ✅ Index created │         │
+    │ Log message      │         │
+    └─────┬────────────┘         │
+          │                      │
+          └──────────┬───────────┘
+                     │
+                     ▼
+    ┌────────────────────────────────────┐
+    │ Log: "All migrations completed!"   │
+    │ Return nil                         │
+    └────────────────┬───────────────────┘
+                     │
+                     ▼
+    ✅ MIGRATION SUCCESS
+
+
+═══════════════════════════════════════════════════════════════════════════════
+3. ERROR HANDLING FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+  During RunMigrations:
+  
+    Any Error Occurs
+           │
+           ▼
+    ┌─────────────────────────┐
+    │ Create error wrapper    │
+    │ fmt.Errorf(...)         │
+    └──────────┬──────────────┘
+               │
+               ▼
+    ┌────────────────────────────────────┐
+    │ Return to main.go                  │
+    │ Error not nil                      │
+    └──────────┬─────────────────────────┘
+               │
+               ▼
+    ┌──────────────────────────────────────────┐
+    │ main.go checks: if err != nil            │
+    └──────────┬───────────────────────────────┘
+               │
+               ▼
+    ┌──────────────────────────────────────────┐
+    │ log.Fatalf("Failed to run migrations")   │
+    │ Application exits with error             │
+    │ Error message printed to console         │
+    └──────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+4. USERS TABLE STRUCTURE (CREATED BY MIGRATIONS)
+═══════════════════════════════════════════════════════════════════════════════
+
+  TABLE: users
+  
+  ┌────────────┬────────────────┬──────────────────┐
+  │ Column     │ Type           │ Constraints      │
+  ├────────────┼────────────────┼──────────────────┤
+  │ id         │ BIGSERIAL      │ PRIMARY KEY      │
+  │ name       │ VARCHAR(255)   │ NOT NULL         │
+  │ email      │ VARCHAR(255)   │ NOT NULL, UNIQUE │
+  │ created_at │ TIMESTAMP      │ DEFAULT NOW()    │
+  │ updated_at │ TIMESTAMP      │ DEFAULT NOW()    │
+  └────────────┴────────────────┴──────────────────┘
+  
+  INDEXES:
+  └─ idx_users_email (on email column)
+  
+  TRIGGERS:
+  └─ trigger_users_updated_at
+     └─ Updates updated_at on every row change
+
+
+═══════════════════════════════════════════════════════════════════════════════
+5. DATA FLOW: INSERT OPERATION
+═══════════════════════════════════════════════════════════════════════════════
+
+  Client Request:
+  ┌──────────────────────────────┐
+  │ POST /api/v1/users           │
+  │ {                            │
+  │   "name": "John",            │
+  │   "email": "john@ex.com"     │
+  │ }                            │
+  └──────────┬───────────────────┘
+             │
+             ▼
+  ┌──────────────────────────────┐
+  │ UserHandler.CreateUser()     │
+  │ (via middleware chain)       │
+  └──────────┬───────────────────┘
+             │
+             ▼
+  ┌──────────────────────────────┐
+  │ UserService.CreateUser()     │
+  │ Business logic               │
+  └──────────┬───────────────────┘
+             │
+             ▼
+  ┌──────────────────────────────┐
+  │ UserRepository.Create()      │
+  │ (uses migrated schema)       │
+  └──────────┬───────────────────┘
+             │
+             ▼
+  ┌──────────────────────────────┐
+  │ INSERT INTO users            │
+  │   (name, email)              │
+  │ VALUES (...)                 │
+  │                              │
+  │ Database Triggers:           │
+  │ ├─ Generate id (BIGSERIAL)   │
+  │ ├─ Set created_at = NOW()    │
+  │ ├─ Set updated_at = NOW()    │
+  │ └─ Verify UNIQUE email       │
+  └──────────┬───────────────────┘
+             │
+             ▼
+  ┌──────────────────────────────┐
+  │ ✅ Row inserted successfully │
+  │ Return User object           │
+  └──────────┬───────────────────┘
+             │
+             ▼
+  ┌──────────────────────────────┐
+  │ Response to Client           │
+  │ HTTP 201 Created             │
+  │ {                            │
+  │   "id": 1,                   │
+  │   "name": "John",            │
+  │   "email": "john@ex.com",    │
+  │   "created_at": "2024...",   │
+  │   "updated_at": "2024..."    │
+  │ }                            │
+  └──────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+6. DATA FLOW: UPDATE OPERATION
+═══════════════════════════════════════════════════════════════════════════════
+
+  Client Request:
+  ┌────────────────────────────────┐
+  │ PUT /api/v1/users/1            │
+  │ {                              │
+  │   "name": "John Updated"       │
+  │ }                              │
+  └────────┬───────────────────────┘
+           │
+           ▼
+  ┌────────────────────────────────┐
+  │ UserHandler.UpdateUser()       │
+  └────────┬───────────────────────┘
+           │
+           ▼
+  ┌────────────────────────────────┐
+  │ UserRepository.Update()        │
+  │ UPDATE users SET ...           │
+  │ WHERE id = 1                   │
+  └────────┬───────────────────────┘
+           │
+           ▼ (MIGRATION TRIGGER FIRES!)
+  ┌───────────────────────────────────┐
+  │ trigger_users_updated_at         │
+  │ ┌─────────────────────────────┐   │
+  │ │ NEW.updated_at = NOW()      │   │
+  │ │ (Automatically updated)     │   │
+  │ └─────────────────────────────┘   │
+  └────────┬──────────────────────────┘
+           │
+           ▼
+  ┌────────────────────────────────┐
+  │ ✅ Row updated                 │
+  │ updated_at = current timestamp │
+  └────────┬───────────────────────┘
+           │
+           ▼
+  ┌────────────────────────────────┐
+  │ Response to Client             │
+  │ HTTP 200 OK                    │
+  │ {                              │
+  │   "id": 1,                     │
+  │   "name": "John Updated",      │
+  │   "email": "john@ex.com",      │
+  │   "created_at": "2024...",     │
+  │   "updated_at": "2024..." ◄──  │
+  │ }                 ↑ Updated    │
+  └────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+7. DATABASE QUERY OPTIMIZATION (INDEXES)
+═══════════════════════════════════════════════════════════════════════════════
+
+  Query: Find user by email
+  
+  Without index:
+  ┌──────────────────────┐
+  │ SELECT * FROM users  │
+  │ WHERE email = '...'  │
+  └──────┬───────────────┘
+         │
+         ▼ (SLOW - Full table scan)
+  ┌────────────────────────────────────┐
+  │ Scan ALL rows in table             │
+  │ Row 1 - Check if matches? No       │
+  │ Row 2 - Check if matches? No       │
+  │ Row 3 - Check if matches? No       │
+  │ ... (scan all rows)                │
+  │ Row N - Found!                     │
+  └────────────────────────────────────┘
+  
+  With index (idx_users_email):
+  ┌──────────────────────────────────────────────┐
+  │ CREATE INDEX idx_users_email ON users(email) │
+  └──────┬───────────────────────────────────────┘
+         │
+         ▼
+  ┌────────────────────────────────────────────────┐
+  │ B-Tree Index Structure                         │
+  │                                                │
+  │         ┌─────────────────┐                    │
+  │         │  Root Node      │                    │
+  │         └────────┬────────┘                    │
+  │                  │                             │
+  │      ┌───────────┼────────────┐                │
+  │      ▼           ▼            ▼                │
+  │   [a-m]      [n-z]       [symbols]            │
+  │      │           │            │                │
+  │      └─────┬─────┘            │                │
+  │            │                  │                │
+  │      [Direct lookup]          │                │
+  │      john@ex.com ◄────────────┘                │
+  │            │                                   │
+  │            ▼ (FAST - O(log n))                │
+  │   Found immediately!                          │
+  └────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+8. MIGRATION STATE MACHINE
+═══════════════════════════════════════════════════════════════════════════════
+
+  Fresh Database:
+  
+  ┌────────────────────────────┐
+  │ Database Exists            │
+  │ But no tables              │
+  └────────┬───────────────────┘
+           │
+           ▼ RunMigrations()
+  
+  ┌────────────────────────────┐
+  │ Migration 001 Runs         │
+  │ ├─ Check: Table exists?    │
+  │ │  └─ NO                   │
+  │ ├─ Create: users table     │
+  │ ├─ Create: email index     │
+  │ └─ SUCCESS                 │
+  └────────┬───────────────────┘
+           │
+           ▼
+  
+  ┌────────────────────────────┐
+  │ Database Ready             │
+  │ ├─ Table: users            │
+  │ ├─ Index: idx_users_email  │
+  │ └─ Trigger: auto-updated_at│
+  └────────────────────────────┘
+  
+  
+  Subsequent Runs:
+  
+  ┌────────────────────────────┐
+  │ Server Restart             │
+  │ RunMigrations() called      │
+  └────────┬───────────────────┘
+           │
+           ▼
+  
+  ┌────────────────────────────┐
+  │ Migration 001 Checks       │
+  │ ├─ HasTable("users")?      │
+  │ │  └─ YES (Skip)           │
+  │ ├─ HasIndex("email")?      │
+  │ │  └─ YES (Skip)           │
+  │ └─ IDEMPOTENT - No changes │
+  └────────┬───────────────────┘
+           │
+           ▼
+  
+  ┌────────────────────────────┐
+  │ ✅ Safe - No duplicate     │
+  │    objects created         │
+  │ Application continues      │
+  └────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+9. TROUBLESHOOTING FLOWCHART
+═══════════════════════════════════════════════════════════════════════════════
+
+  Migration Fails
+        │
+        ▼
+  ┌─────────────────────────────────────┐
+  │ Check Error Message                 │
+  └────┬────────────────────────────┬───┘
+       │                            │
+       ▼                            ▼
+  "Connection refused"         "Table/Column"
+       │                       "already exists"
+       ▼                            │
+  Database not running         Idempotency issue
+  or wrong host/port               │
+       │                            ▼
+       ▼                      Add IF NOT EXISTS
+  ┌──────────────────┐        to migration
+  │ docker run or    │
+  │ start database   │        OR
+  │ check env vars   │
+  └──────────────────┘        ├─ Check schema
+                              ├─ Verify migration
+                              └─ Run manually
+       │                            │
+       └────────────┬───────────────┘
+                    │
+                    ▼
+         ┌──────────────────────┐
+         │ Run server again     │
+         │ Retry migration      │
+         └──────────────────────┘
+                    │
+                    ▼
+              ✅ Success or
+              ❌ Investigate further
+
+
+═══════════════════════════════════════════════════════════════════════════════
+10. TIMING & PERFORMANCE
+═══════════════════════════════════════════════════════════════════════════════
+
+  Typical Migration Execution:
+  
+  Load Config                     ~1ms
+  ├─ Read environment variables
+  └─ Parse configuration
+           │
+           ▼
+  Create DI Container             ~2ms
+  ├─ Setup registry
+  └─ Initialize modules
+           │
+           ▼
+  Setup Dependencies              ~50ms
+  ├─ Create providers
+  ├─ Initialize services
+  └─ Resolve dependencies
+           │
+           ▼
+  Connect to Database             ~100ms
+  ├─ Establish connection
+  ├─ Test connectivity
+  └─ Return db instance
+           │
+           ▼
+  Run Migrations                  ~50ms  ◄── MIGRATION TIME
+  ├─ Check tables exist           ~5ms
+  ├─ Create if needed             ~20ms (first run only)
+  ├─ Check indexes exist          ~5ms
+  ├─ Create if needed             ~15ms (first run only)
+  └─ Verify success               ~5ms
+           │
+           ▼
+  Setup Router                    ~10ms
+  ├─ Initialize Gin engine
+  ├─ Register routes
+  └─ Prepare handlers
+           │
+           ▼
+  Start Server                    LISTENING
+  
+  Total Time:
+  ├─ First run:      ~200ms (with table creation)
+  └─ Subsequent:     ~150ms (tables already exist)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+LEGEND:
+───────
+  ▼     Flow direction
+  ─     Sequence boundary
+  ├─    Item in list
+  └─    Last item in list
+  ◄──   Reference/pointer
+  ✅    Success state
+  ❌    Error state
+  ⚠️    Warning
+  ◄───  Important note
+
+═══════════════════════════════════════════════════════════════════════════════

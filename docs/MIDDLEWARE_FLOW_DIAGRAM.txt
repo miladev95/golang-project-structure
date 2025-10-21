@@ -1,0 +1,326 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   MIDDLEWARE EXECUTION FLOW DIAGRAM                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+1. MIDDLEWARE EXECUTION ORDER
+═════════════════════════════════════════════════════════════════════════════
+
+HTTP Request
+    ↓
+┌─────────────────────────────────────┐
+│ Logging Middleware (BEFORE)         │
+│ - Log request start                 │
+│ - Record start time                 │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│ Auth Middleware (BEFORE)            │
+│ - Check Authorization header        │
+│ - Validate token                    │
+│ - Abort if invalid                  │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│ ContentType Middleware (BEFORE)     │
+│ - Check Content-Type header         │
+│ - Validate json format              │
+│ - Abort if invalid                  │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│ HANDLER EXECUTION                   │
+│ - Process request                   │
+│ - Execute business logic            │
+│ - Return response                   │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│ ContentType Middleware (AFTER)      │
+│ - (Cleanup if needed)               │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│ Auth Middleware (AFTER)             │
+│ - (Cleanup if needed)               │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│ Logging Middleware (AFTER)          │
+│ - Log response status               │
+│ - Log duration                      │
+│ - Log completion                    │
+└─────────────────────────────────────┘
+    ↓
+HTTP Response
+
+
+2. USER ROUTES MIDDLEWARE SETUP
+═════════════════════════════════════════════════════════════════════════════
+
+    /api/v1/users (UserRouter)
+    │
+    └─ Group: "/api/v1/users"
+       │
+       ├─ Middleware Applied:
+       │  └─ LoggingMiddleware() ← Applied to ALL routes below
+       │
+       ├─ Route: GET / (GetAllUsers)
+       │  ├─ Middlewares: Logging
+       │  └─ Protection: PUBLIC
+       │
+       ├─ Route: GET /:id (GetUser)
+       │  ├─ Middlewares: Logging
+       │  └─ Protection: PUBLIC
+       │
+       └─ Group: "" (nested for writes)
+          │
+          ├─ Middleware Applied:
+          │  ├─ AuthMiddleware()
+          │  └─ ContentTypeMiddleware()
+          │
+          ├─ Route: POST / (CreateUser)
+          │  ├─ Middlewares: Logging, Auth, ContentType
+          │  └─ Protection: PROTECTED
+          │
+          ├─ Route: PUT /:id (UpdateUser)
+          │  ├─ Middlewares: Logging, Auth, ContentType
+          │  └─ Protection: PROTECTED
+          │
+          └─ Route: DELETE /:id (DeleteUser)
+             ├─ Middlewares: Logging, Auth, ContentType
+             └─ Protection: PROTECTED
+
+
+3. PROTECTION LEVELS DIAGRAM
+═════════════════════════════════════════════════════════════════════════════
+
+PUBLIC ENDPOINTS (No Auth Required)
+┌─────────────────────────────────────────────────┐
+│ GET /api/v1/users                              │
+│ GET /api/v1/users/:id                          │
+│                                                 │
+│ Middleware: LoggingMiddleware                   │
+│ Response: Always 200 OK (if found)              │
+└─────────────────────────────────────────────────┘
+
+
+PROTECTED ENDPOINTS (Auth Required)
+┌─────────────────────────────────────────────────┐
+│ POST   /api/v1/users                            │
+│ PUT    /api/v1/users/:id                        │
+│ DELETE /api/v1/users/:id                        │
+│                                                 │
+│ Middleware:                                     │
+│ ├─ LoggingMiddleware                            │
+│ ├─ AuthMiddleware                               │
+│ └─ ContentTypeMiddleware                        │
+│                                                 │
+│ Possible Responses:                             │
+│ ├─ 400 Bad Request (missing Content-Type)       │
+│ ├─ 401 Unauthorized (missing/invalid token)     │
+│ ├─ 201 Created (success)                        │
+│ └─ 200 OK (update/delete success)               │
+└─────────────────────────────────────────────────┘
+
+
+4. MIDDLEWARE FLOW FOR EACH REQUEST
+═════════════════════════════════════════════════════════════════════════════
+
+REQUEST A: GET /api/v1/users
+────────────────────────────────────
+1. LoggingMiddleware ✓ (pass)
+2. Handler: GetAllUsers → 200 OK
+3. LoggingMiddleware (log result)
+RESULT: ✅ 200 OK [Logged]
+
+
+REQUEST B: POST /api/v1/users (No Header)
+──────────────────────────────────────────
+1. LoggingMiddleware ✓ (pass)
+2. AuthMiddleware ✗ (ABORT) → 401 Unauthorized
+RESULT: ❌ 401 Unauthorized [Logged]
+
+
+REQUEST C: POST /api/v1/users (Invalid Content-Type)
+──────────────────────────────────────────────────────
+1. LoggingMiddleware ✓ (pass)
+2. AuthMiddleware ✓ (pass - token valid)
+3. ContentTypeMiddleware ✗ (ABORT) → 400 Bad Request
+RESULT: ❌ 400 Bad Request [Logged]
+
+
+REQUEST D: POST /api/v1/users (Valid)
+──────────────────────────────────────
+1. LoggingMiddleware ✓ (pass)
+2. AuthMiddleware ✓ (token valid)
+3. ContentTypeMiddleware ✓ (json valid)
+4. Handler: CreateUser → 201 Created
+5. ContentTypeMiddleware (after)
+6. AuthMiddleware (after)
+7. LoggingMiddleware (log result)
+RESULT: ✅ 201 Created [Logged]
+
+
+5. MIDDLEWARE CHARACTERISTICS
+═════════════════════════════════════════════════════════════════════════════
+
+LoggingMiddleware
+├─ Purpose: Track requests
+├─ When: Always
+├─ Short-circuits: NO
+└─ Response: None (just logs)
+
+AuthMiddleware
+├─ Purpose: Validate token
+├─ When: Protected routes only
+├─ Short-circuits: YES (on auth failure)
+├─ Response: 401 Unauthorized
+
+ContentTypeMiddleware
+├─ Purpose: Validate request format
+├─ When: Write operations (POST, PUT, PATCH)
+├─ Short-circuits: YES (on format error)
+└─ Response: 400 Bad Request
+
+RateLimitMiddleware
+├─ Purpose: Prevent abuse
+├─ When: Sensitive endpoints
+├─ Short-circuits: YES (on limit exceeded)
+└─ Response: 429 Too Many Requests
+
+
+6. CODE FLOW EXAMPLE
+═════════════════════════════════════════════════════════════════════════════
+
+User Routes Setup (routes/user_routes.go)
+─────────────────────────────────────────
+
+userGroup := router.Group("/api/v1/users")
+{
+    // Step 1: Apply logging to ALL routes
+    userGroup.Use(middleware.LoggingMiddleware())
+    
+    // Step 2: Public routes (just logged)
+    userGroup.GET("", r.handler.GetAllUsers)      // Logging only
+    userGroup.GET("/:id", r.handler.GetUser)       // Logging only
+    
+    // Step 3: Create protected subgroup for writes
+    writeGroup := userGroup.Group("")
+    writeGroup.Use(middleware.AuthMiddleware())
+    writeGroup.Use(middleware.ContentTypeMiddleware())
+    {
+        // Step 4: Protected routes (Logging + Auth + ContentType)
+        writeGroup.POST("", r.handler.CreateUser)
+        writeGroup.PUT("/:id", r.handler.UpdateUser)
+        writeGroup.DELETE("/:id", r.handler.DeleteUser)
+    }
+}
+
+Execution Tree:
+    userGroup
+    ├─ LoggingMiddleware()
+    ├─ GET "" → GetAllUsers
+    ├─ GET "/:id" → GetUser
+    └─ writeGroup
+       ├─ AuthMiddleware()
+       ├─ ContentTypeMiddleware()
+       ├─ POST "" → CreateUser
+       ├─ PUT "/:id" → UpdateUser
+       └─ DELETE "/:id" → DeleteUser
+
+
+7. ERROR RESPONSES
+═════════════════════════════════════════════════════════════════════════════
+
+Missing Authorization Header:
+────────────────────────────
+Request: POST /api/v1/users
+Headers: Content-Type: application/json
+Body: {"name": "John"}
+
+Response: 401 Unauthorized
+{
+    "success": false,
+    "error": "Authorization header missing"
+}
+
+
+Invalid Token:
+──────────────
+Request: POST /api/v1/users
+Headers: 
+  - Content-Type: application/json
+  - Authorization: Bearer invalid_short_token
+Body: {"name": "John"}
+
+Response: 401 Unauthorized
+{
+    "success": false,
+    "error": "Invalid or expired token"
+}
+
+
+Missing Content-Type:
+─────────────────────
+Request: POST /api/v1/users
+Headers: Authorization: Bearer valid_token
+Body: {"name": "John"}
+
+Response: 400 Bad Request
+{
+    "success": false,
+    "error": "Content-Type must be application/json"
+}
+
+
+Rate Limit Exceeded:
+────────────────────
+Request: POST /api/v1/users (10th request in 1 minute)
+Headers: Valid auth headers
+
+Response: 429 Too Many Requests
+{
+    "success": false,
+    "error": "Rate limit exceeded. Too many requests."
+}
+
+
+8. TESTING FLOW
+═════════════════════════════════════════════════════════════════════════════
+
+1. Test Public Routes
+   ├─ curl -X GET http://localhost:8080/api/v1/users
+   └─ Expect: 200 OK (logged)
+
+2. Test Protected Route Without Auth
+   ├─ curl -X POST http://localhost:8080/api/v1/users \
+   │  -H "Content-Type: application/json" \
+   │  -d '{"name": "John"}'
+   └─ Expect: 401 Unauthorized
+
+3. Test Protected Route With Auth
+   ├─ curl -X POST http://localhost:8080/api/v1/users \
+   │  -H "Content-Type: application/json" \
+   │  -H "Authorization: Bearer valid_token" \
+   │  -d '{"name": "John"}'
+   └─ Expect: 201 Created (or 400/500 if handler fails)
+
+4. Test Content-Type Validation
+   ├─ curl -X POST http://localhost:8080/api/v1/users \
+   │  -H "Authorization: Bearer token"
+   │  -d '{"name": "John"}'
+   └─ Expect: 400 Bad Request (missing Content-Type)
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+KEY POINTS
+──────────
+
+✓ Middlewares execute in order
+✓ Logging middleware always runs first
+✓ Auth middleware prevents unauthorized access
+✓ ContentType validation ensures data integrity
+✓ Short-circuit prevents further execution on error
+✓ c.Abort() stops middleware chain and returns error

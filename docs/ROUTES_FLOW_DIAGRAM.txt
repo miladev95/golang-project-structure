@@ -1,0 +1,175 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                     ROUTES DECOUPLING - DATA FLOW                          ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+1. APPLICATION STARTUP
+═════════════════════════════════════════════════════════════════════════════
+
+    cmd/server/main.go
+        │
+        ├─→ Load Config
+        ├─→ Create DI Container
+        ├─→ Register Modules (DI)
+        ├─→ Setup Dependencies
+        ├─→ Create Gin Router
+        │
+        └─→ GET HANDLERS FROM DI CONTAINER
+            ├─ userHandler := container.GetUserHandler()
+            ├─ productHandler := container.GetProductHandler()
+            └─ orderHandler := container.GetOrderHandler()
+
+
+2. ROUTE REGISTRATION
+═════════════════════════════════════════════════════════════════════════════
+
+    routes.RegisterAll(router, routerInstances...)
+        │
+        ├─→ routes.NewUserRouter(userHandler)
+        │       │
+        │       └─→ UserRouter.Register(*gin.Engine)
+        │           ├─ GET    /api/v1/users
+        │           ├─ GET    /api/v1/users/:id
+        │           ├─ POST   /api/v1/users
+        │           ├─ PUT    /api/v1/users/:id
+        │           └─ DELETE /api/v1/users/:id
+        │
+        ├─→ routes.NewProductRouter(productHandler)
+        │       │
+        │       └─→ ProductRouter.Register(*gin.Engine)
+        │           ├─ GET    /api/v1/products
+        │           ├─ GET    /api/v1/products/:id
+        │           └─ ...more routes
+        │
+        └─→ routes.NewOrderRouter(orderHandler)
+                │
+                └─→ OrderRouter.Register(*gin.Engine)
+                    ├─ GET    /api/v1/orders
+                    ├─ POST   /api/v1/orders
+                    └─ ...more routes
+
+
+3. HTTP REQUEST FLOW
+═════════════════════════════════════════════════════════════════════════════
+
+    Client Request
+        │
+        ├─→ GET /api/v1/users
+        │
+        ├─→ Router matches route
+        │       Gin finds: UserRouter.Register() → GetAllUsers
+        │
+        ├─→ UserHandler.GetAllUsers(c *gin.Context)
+        │       │
+        │       ├─→ Extract parameters/body
+        │       ├─→ Call userService.GetAllUsers(ctx)
+        │       │       │
+        │       │       ├─→ Business logic execution
+        │       │       └─→ Call userRepository methods
+        │       │
+        │       └─→ response.SuccessOK(c, data)
+        │           └─→ Centralized response formatting
+        │
+        └─→ HTTP Response (200 OK with JSON)
+
+
+4. DIRECTORY STRUCTURE
+═════════════════════════════════════════════════════════════════════════════
+
+Before (Routes coupled to handlers):
+    
+    internal/handlers/http/
+    ├── user_handler.go
+    │   └── RegisterRoutes() method
+    ├── product_handler.go
+    │   └── RegisterRoutes() method
+    └── order_handler.go
+        └── RegisterRoutes() method
+
+
+After (Routes decoupled):
+
+    internal/handlers/http/
+    ├── routes/                      ← NEW: Route definitions
+    │   ├── router.go               # Router interface
+    │   ├── user_routes.go          # User routes
+    │   ├── product_routes.go       # Product routes
+    │   └── order_routes.go         # Order routes
+    ├── user_handler.go             # No RegisterRoutes()
+    ├── product_handler.go          # No RegisterRoutes()
+    ├── order_handler.go            # No RegisterRoutes()
+    └── response/
+        └── response.go
+
+
+5. ADDING NEW ENTITY
+═════════════════════════════════════════════════════════════════════════════
+
+Step 1: Create Handler
+    internal/handlers/http/invoice_handler.go
+        type InvoiceHandler struct { ... }
+        func (h *InvoiceHandler) GetAllInvoices(...) { ... }
+        func (h *InvoiceHandler) GetInvoice(...) { ... }
+        // ... more methods
+
+
+Step 2: Create Router (NEW)
+    internal/handlers/http/routes/invoice_routes.go
+        type InvoiceRouter struct {
+            handler *http.InvoiceHandler
+        }
+        func (r *InvoiceRouter) Register(router *gin.Engine) {
+            invoiceGroup := router.Group("/api/v1/invoices")
+            invoiceGroup.GET("", r.handler.GetAllInvoices)
+            invoiceGroup.GET("/:id", r.handler.GetInvoice)
+            // ... more routes
+        }
+
+
+Step 3: Register in main.go
+    routers := []routes.Router{
+        routes.NewUserRouter(userHandler),
+        routes.NewInvoiceRouter(invoiceHandler),  ← ADD THIS
+    }
+    routes.RegisterAll(router, routers...)
+
+
+✅ DONE! No need to modify handlers or main router logic!
+
+
+6. SEPARATION OF CONCERNS
+═════════════════════════════════════════════════════════════════════════════
+
+BEFORE (Mixed Concerns):
+    Handler
+    ├─ Route definitions ✗ (Business logic layer mixed with routing)
+    ├─ Parameter extraction ✓
+    ├─ Service calls ✓
+    └─ Response formatting ✗ (Moved to response layer)
+
+AFTER (Separated):
+    Router
+    ├─ Route definitions ✓ (Dedicated layer)
+    └─ Endpoint mapping ✓
+
+    Handler
+    ├─ Parameter extraction ✓
+    ├─ Service calls ✓
+    └─ Response delegation ✓
+
+    Response Layer
+    ├─ Response formatting ✓ (Centralized)
+    └─ Status code handling ✓
+
+
+7. BENEFITS
+═════════════════════════════════════════════════════════════════════════════
+
+✅ Single Responsibility     - Handler = Logic, Router = Routing
+✅ Easier to Test           - Routes and handlers independently testable
+✅ Better Maintenance       - Change routes without touching handlers
+✅ Scalability              - Add entities without main.go complexity
+✅ Readability              - Clear separation between routing & logic
+✅ Consistency              - All routers follow same pattern
+✅ Flexibility              - Easy middleware addition to route groups
+✅ Reusability              - Routers can be tested in isolation
