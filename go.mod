@@ -1,4 +1,4 @@
-module github.com/yourusername/yourproject
+module github.com/miladev95/golang-project-structure
 
 go 1.23
 

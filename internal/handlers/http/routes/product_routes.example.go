@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	// "github.com/yourusername/yourproject/internal/handlers/http"
+	// "github.com/miladev95/golang-project-structure/internal/handlers/http"
 )
 
 // ProductRouter handles product-related routes

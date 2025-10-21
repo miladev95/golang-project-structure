@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 
-	"github.com/yourusername/yourproject/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/models"
 )
 
 // UserRepository defines the interface for user data access

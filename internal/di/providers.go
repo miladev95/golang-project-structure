@@ -3,7 +3,7 @@ package di
 import (
 	"gorm.io/gorm"
 
-	"github.com/yourusername/yourproject/internal/config"
+	"github.com/miladev95/golang-project-structure/internal/config"
 )
 
 // ProvideConfig provides the application configuration

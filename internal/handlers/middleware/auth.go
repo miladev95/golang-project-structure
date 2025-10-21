@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/yourproject/internal/handlers/response"
+	"github.com/miladev95/golang-project-structure/internal/handlers/response"
 )
 
 // AuthMiddleware checks for a valid authorization token
@@ -10,14 +10,14 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
-		
+
 		// Check if token exists
 		if token == "" {
 			response.ErrorUnauthorized(c, "Authorization header missing")
 			c.Abort()
 			return
 		}
-		
+
 		// Validate token (simple example - replace with real logic)
 		// In production, validate JWT or session tokens here
 		if !isValidToken(token) {
@@ -25,7 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// Token is valid, continue to next handler
 		c.Next()
 	}

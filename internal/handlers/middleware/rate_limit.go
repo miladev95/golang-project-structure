@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/yourproject/internal/handlers/response"
+	"github.com/miladev95/golang-project-structure/internal/handlers/response"
 )
 
 // RateLimiter stores request counts per IP
@@ -26,17 +26,17 @@ func NewRateLimiter() *RateLimiter {
 func (rl *RateLimiter) RateLimitMiddleware(maxRequests int, duration time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
-		
+
 		rl.mu.Lock()
 		defer rl.mu.Unlock()
-		
+
 		now := time.Now()
-		
+
 		// Get or create request log for this IP
 		if _, exists := rl.requests[ip]; !exists {
 			rl.requests[ip] = []time.Time{}
 		}
-		
+
 		// Remove old requests outside the time window
 		var recentRequests []time.Time
 		for _, reqTime := range rl.requests[ip] {
@@ -44,18 +44,18 @@ func (rl *RateLimiter) RateLimitMiddleware(maxRequests int, duration time.Durati
 				recentRequests = append(recentRequests, reqTime)
 			}
 		}
-		
+
 		// Check if limit exceeded
 		if len(recentRequests) >= maxRequests {
 			response.ErrorTooManyRequests(c, "Rate limit exceeded. Too many requests.")
 			c.Abort()
 			return
 		}
-		
+
 		// Add current request
 		recentRequests = append(recentRequests, now)
 		rl.requests[ip] = recentRequests
-		
+
 		c.Next()
 	}
 }

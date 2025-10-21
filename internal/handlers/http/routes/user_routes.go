@@ -2,8 +2,8 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/yourproject/internal/handlers/http"
-	"github.com/yourusername/yourproject/internal/handlers/middleware"
+	"github.com/miladev95/golang-project-structure/internal/handlers/http"
+	"github.com/miladev95/golang-project-structure/internal/handlers/middleware"
 )
 
 // UserRouter handles user-related routes
@@ -29,10 +29,10 @@ func (r *UserRouter) Register(router *gin.Engine) {
 	{
 		// Apply logging middleware to all user routes
 		userGroup.Use(middleware.LoggingMiddleware())
-		
+
 		userGroup.GET("", r.handler.GetAllUsers)
 		userGroup.GET("/:id", r.handler.GetUser)
-		
+
 		// Apply auth middleware only to write operations
 		writeGroup := userGroup.Group("")
 		writeGroup.Use(middleware.AuthMiddleware())

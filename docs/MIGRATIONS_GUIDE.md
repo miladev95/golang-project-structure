@@ -117,7 +117,7 @@ EXECUTE FUNCTION update_users_updated_at();
 ### Running Migrations Programmatically
 
 ```go
-import "github.com/yourusername/yourproject/internal/config"
+import "github.com/miladev95/golang-project-structure/internal/config"
 
 // In your application startup
 db, err := config.NewDatabase(cfg)
@@ -134,7 +134,7 @@ if err := config.RunMigrations(db); err != nil {
 ### Checking Migration Status
 
 ```go
-import "github.com/yourusername/yourproject/internal/config"
+import "github.com/miladev95/golang-project-structure/internal/config"
 
 db, err := config.NewDatabase(cfg)
 status := config.CheckMigrationStatus(db)

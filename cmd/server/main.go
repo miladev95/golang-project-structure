@@ -4,10 +4,10 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/yourproject/internal/config"
-	"github.com/yourusername/yourproject/internal/di"
-	"github.com/yourusername/yourproject/internal/di/modules"
-	"github.com/yourusername/yourproject/internal/handlers/http/routes"
+	"github.com/miladev95/golang-project-structure/internal/config"
+	"github.com/miladev95/golang-project-structure/internal/di"
+	"github.com/miladev95/golang-project-structure/internal/di/modules"
+	"github.com/miladev95/golang-project-structure/internal/handlers/http/routes"
 )
 
 func main() {

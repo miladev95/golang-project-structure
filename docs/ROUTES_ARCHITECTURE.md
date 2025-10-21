@@ -87,7 +87,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 ### 4. Route Registration in main.go
 
 ```go
-import "github.com/yourusername/yourproject/internal/handlers/http/routes"
+import "github.com/miladev95/golang-project-structure/internal/handlers/http/routes"
 
 func main() {
     // ... setup code ...
@@ -139,7 +139,7 @@ package routes
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/yourusername/yourproject/internal/handlers/http"
+    "github.com/miladev95/golang-project-structure/internal/handlers/http"
 )
 
 type ProductRouter struct {

@@ -3,9 +3,9 @@ package di
 import (
 	"go.uber.org/dig"
 
-	"github.com/yourusername/yourproject/internal/config"
-	"github.com/yourusername/yourproject/internal/di/modules"
-	"github.com/yourusername/yourproject/internal/handlers/http"
+	"github.com/miladev95/golang-project-structure/internal/config"
+	"github.com/miladev95/golang-project-structure/internal/di/modules"
+	"github.com/miladev95/golang-project-structure/internal/handlers/http"
 )
 
 // Container represents the dependency injection container

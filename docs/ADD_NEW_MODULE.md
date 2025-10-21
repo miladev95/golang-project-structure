@@ -41,7 +41,7 @@ package repositories
 import (
 	"context"
 
-	"github.com/yourusername/yourproject/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/models"
 )
 
 // ProductRepository defines the interface for product data access
@@ -66,8 +66,8 @@ package postgres
 import (
 	"context"
 
-	"github.com/yourusername/yourproject/internal/models"
-	"github.com/yourusername/yourproject/internal/repositories"
+	"github.com/miladev95/golang-project-structure/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/repositories"
 	"gorm.io/gorm"
 )
 
@@ -123,8 +123,8 @@ package services
 import (
 	"context"
 
-	"github.com/yourusername/yourproject/internal/models"
-	"github.com/yourusername/yourproject/internal/repositories"
+	"github.com/miladev95/golang-project-structure/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/repositories"
 )
 
 // ProductService defines the business logic interface for products
@@ -184,9 +184,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/yourproject/internal/handlers/response"
-	"github.com/yourusername/yourproject/internal/models"
-	"github.com/yourusername/yourproject/internal/services"
+	"github.com/miladev95/golang-project-structure/internal/handlers/response"
+	"github.com/miladev95/golang-project-structure/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/services"
 )
 
 type ProductHandler struct {
@@ -302,10 +302,10 @@ import (
 	"go.uber.org/dig"
 	"gorm.io/gorm"
 
-	"github.com/yourusername/yourproject/internal/handlers/http"
-	"github.com/yourusername/yourproject/internal/repositories"
-	postgresrepo "github.com/yourusername/yourproject/internal/repositories/postgres"
-	"github.com/yourusername/yourproject/internal/services"
+	"github.com/miladev95/golang-project-structure/internal/handlers/http"
+	"github.com/miladev95/golang-project-structure/internal/repositories"
+	postgresrepo "github.com/miladev95/golang-project-structure/internal/repositories/postgres"
+	"github.com/miladev95/golang-project-structure/internal/services"
 )
 
 type ProductModule struct{}

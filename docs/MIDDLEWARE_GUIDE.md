@@ -281,7 +281,7 @@ package middleware
 import (
     "log"
     "github.com/gin-gonic/gin"
-    "github.com/yourusername/yourproject/internal/handlers/response"
+    "github.com/miladev95/golang-project-structure/internal/handlers/response"
 )
 
 func RecoveryMiddleware() gin.HandlerFunc {

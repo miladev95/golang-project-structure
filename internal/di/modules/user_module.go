@@ -4,10 +4,10 @@ import (
 	"go.uber.org/dig"
 	"gorm.io/gorm"
 
-	"github.com/yourusername/yourproject/internal/handlers/http"
-	"github.com/yourusername/yourproject/internal/repositories"
-	postgresrepo "github.com/yourusername/yourproject/internal/repositories/postgres"
-	"github.com/yourusername/yourproject/internal/services"
+	"github.com/miladev95/golang-project-structure/internal/handlers/http"
+	"github.com/miladev95/golang-project-structure/internal/repositories"
+	postgresrepo "github.com/miladev95/golang-project-structure/internal/repositories/postgres"
+	"github.com/miladev95/golang-project-structure/internal/services"
 )
 
 // UserModule represents the user domain module

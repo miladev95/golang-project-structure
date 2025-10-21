@@ -10,17 +10,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	handlers "github.com/yourusername/yourproject/internal/handlers/http"
-	"github.com/yourusername/yourproject/internal/models"
+	handlers "github.com/miladev95/golang-project-structure/internal/handlers/http"
+	"github.com/miladev95/golang-project-structure/internal/models"
 )
 
 // MockUserService implements services.UserService for testing
 type MockUserService struct {
-	GetUserFunc      func(ctx context.Context, id int64) (*models.User, error)
-	GetAllUsersFunc  func(ctx context.Context) ([]models.User, error)
-	CreateUserFunc   func(ctx context.Context, user *models.User) (*models.User, error)
-	UpdateUserFunc   func(ctx context.Context, user *models.User) error
-	DeleteUserFunc   func(ctx context.Context, id int64) error
+	GetUserFunc     func(ctx context.Context, id int64) (*models.User, error)
+	GetAllUsersFunc func(ctx context.Context) ([]models.User, error)
+	CreateUserFunc  func(ctx context.Context, user *models.User) (*models.User, error)
+	UpdateUserFunc  func(ctx context.Context, user *models.User) error
+	DeleteUserFunc  func(ctx context.Context, id int64) error
 }
 
 func (m *MockUserService) GetUser(ctx context.Context, id int64) (*models.User, error) {

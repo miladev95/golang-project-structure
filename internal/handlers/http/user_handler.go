@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/yourproject/internal/handlers/response"
-	"github.com/yourusername/yourproject/internal/models"
-	"github.com/yourusername/yourproject/internal/services"
+	"github.com/miladev95/golang-project-structure/internal/handlers/response"
+	"github.com/miladev95/golang-project-structure/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/services"
 )
 
 // UserHandler handles user-related HTTP requests

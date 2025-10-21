@@ -27,7 +27,7 @@ AFTER:
 
 ### Updated Test Package
 - **Package Name**: `package tests` (in tests directory)
-- **Import Path**: `"github.com/yourusername/yourproject/pkg/utils"`
+- **Import Path**: `"github.com/miladev95/golang-project-structure/pkg/utils"`
 - All test files now import the utils package instead of being in the same package
 
 ---
@@ -152,7 +152,7 @@ When adding new utilities to `pkg/utils/`:
 
 1. Add implementation to `pkg/utils/<module>.go`
 2. Create corresponding test file: `tests/utils_<module>_test.go`
-3. Use `package tests` and import `"github.com/yourusername/yourproject/pkg/utils"`
+3. Use `package tests` and import `"github.com/miladev95/golang-project-structure/pkg/utils"`
 4. Run tests with: `go test ./tests -v`
 
 ---

@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/yourusername/yourproject/pkg/utils"
+	"github.com/miladev95/golang-project-structure/pkg/utils"
 )
 
 func TestIsValidEmail(t *testing.T) {

@@ -13,7 +13,7 @@ Reusable helper functions organized into modules:
 String manipulation helpers:
 
 ```go
-import "github.com/yourusername/yourproject/pkg/utils"
+import "github.com/miladev95/golang-project-structure/pkg/utils"
 
 // Slugify - Convert to URL-friendly format
 slug := utils.Slugify("Hello World") // "hello-world"
@@ -289,7 +289,7 @@ go test ./pkg/utils -v -cover
 package handlers
 
 import (
-    "github.com/yourusername/yourproject/pkg/utils"
+    "github.com/miladev95/golang-project-structure/pkg/utils"
 )
 
 func CreateUserHandler(c *gin.Context) {
@@ -321,7 +321,7 @@ func CreateUserHandler(c *gin.Context) {
 ```go
 package services
 
-import "github.com/yourusername/yourproject/pkg/utils"
+import "github.com/miladev95/golang-project-structure/pkg/utils"
 
 func (s *UserService) GetUsers(page, pageSize int, total int64) (interface{}, error) {
     pagination := utils.NewPagination(page, pageSize, total)
@@ -340,7 +340,7 @@ func (s *UserService) GetUsers(page, pageSize int, total int64) (interface{}, er
 ```go
 package repositories
 
-import "github.com/yourusername/yourproject/pkg/utils"
+import "github.com/miladev95/golang-project-structure/pkg/utils"
 
 func (r *UserRepository) FindByID(id int) (*User, error) {
     var user User
@@ -373,7 +373,7 @@ $ go test ./pkg/utils -v
     === RUN   TestIsValidEmail/invalid_no_@
     --- PASS: TestIsValidEmail/invalid_no_@ (0.00s)
 
-ok  	github.com/yourusername/yourproject/pkg/utils	0.234s
+ok  	github.com/miladev95/golang-project-structure/pkg/utils	0.234s
 coverage: 95.4% of statements
 ```
 
@@ -381,7 +381,7 @@ coverage: 95.4% of statements
 
 1. **Import in your code:**
    ```go
-   import "github.com/yourusername/yourproject/pkg/utils"
+   import "github.com/miladev95/golang-project-structure/pkg/utils"
    ```
 
 2. **Use utilities:**

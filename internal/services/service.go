@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	"github.com/yourusername/yourproject/internal/models"
-	"github.com/yourusername/yourproject/internal/repositories"
+	"github.com/miladev95/golang-project-structure/internal/models"
+	"github.com/miladev95/golang-project-structure/internal/repositories"
 )
 
 // UserService defines the business logic interface for users

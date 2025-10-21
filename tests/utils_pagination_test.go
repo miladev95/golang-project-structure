@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/yourusername/yourproject/pkg/utils"
+	"github.com/miladev95/golang-project-structure/pkg/utils"
 )
 
 func TestNewPagination(t *testing.T) {
@@ -255,28 +255,28 @@ func TestHasPreviousPage(t *testing.T) {
 
 func TestHasNextPage(t *testing.T) {
 	tests := []struct {
-		name        string
-		page        int
-		totalPage   int
-		expected    bool
+		name      string
+		page      int
+		totalPage int
+		expected  bool
 	}{
 		{
-			name:        "page 1 of 5 - has next",
-			page:        1,
-			totalPage:   5,
-			expected:    true,
+			name:      "page 1 of 5 - has next",
+			page:      1,
+			totalPage: 5,
+			expected:  true,
 		},
 		{
-			name:        "page 5 of 5 - no next",
-			page:        5,
-			totalPage:   5,
-			expected:    false,
+			name:      "page 5 of 5 - no next",
+			page:      5,
+			totalPage: 5,
+			expected:  false,
 		},
 		{
-			name:        "page 3 of 10 - has next",
-			page:        3,
-			totalPage:   10,
-			expected:    true,
+			name:      "page 3 of 10 - has next",
+			page:      3,
+			totalPage: 10,
+			expected:  true,
 		},
 	}
 
@@ -330,28 +330,28 @@ func TestGetPreviousPage(t *testing.T) {
 
 func TestGetNextPage(t *testing.T) {
 	tests := []struct {
-		name        string
-		page        int
-		totalPage   int
-		expected    int
+		name      string
+		page      int
+		totalPage int
+		expected  int
 	}{
 		{
-			name:        "page 1 of 5",
-			page:        1,
-			totalPage:   5,
-			expected:    2,
+			name:      "page 1 of 5",
+			page:      1,
+			totalPage: 5,
+			expected:  2,
 		},
 		{
-			name:        "page 5 of 5",
-			page:        5,
-			totalPage:   5,
-			expected:    5,
+			name:      "page 5 of 5",
+			page:      5,
+			totalPage: 5,
+			expected:  5,
 		},
 		{
-			name:        "page 3 of 10",
-			page:        3,
-			totalPage:   10,
-			expected:    4,
+			name:      "page 3 of 10",
+			page:      3,
+			totalPage: 10,
+			expected:  4,
 		},
 	}
 
