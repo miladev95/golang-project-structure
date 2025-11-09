@@ -6,42 +6,102 @@ A well-structured Go project demonstrating clean architecture principles using G
 
 ```
 project-root/
-├── cmd/
+├── cmd/                                    # Application entry points
 │   └── server/
-│       └── main.go              # Application entry point
-├── internal/
-│   ├── config/
-│   │   └── config.go            # Configuration management
-│   ├── di/
-│   │   └── container.go         # Dependency injection setup
-│   ├── handlers/
-│   │   ├── http/
-│   │   │   ├── routes/          # Route definitions
-│   │   │   │   ├── router.go
-│   │   │   │   └── user_routes.go
-│   │   │   └── user_handler.go  # HTTP handlers
-│   │   ├── response/
-│   │   │   └── response.go      # Response formatting layer
-│   │   └── middleware/          # Middleware functions
-│   │       ├── logging.go       # Request/response logging
-│   │       ├── auth.go          # Authorization checks
-│   │       ├── content_type.go  # Content-Type validation
-│   │       └── rate_limit.go    # Rate limiting
-│   ├── services/
-│   │   └── service.go           # Business logic layer
-│   ├── repositories/
-│   │   ├── repository.go        # Repository interfaces
-│   │   └── postgres/            # Concrete implementations
-│   │       └── user_repository.go
-│   └── models/
-│       └── user.go              # Domain models
-├── pkg/                         # Public packages (if needed)
-├── tests/                       # Test files
-├── migrations/                  # Database migrations
-├── docs/                        # Documentation
-├── go.mod                       # Go module file
-├── .env.example                 # Environment variables template
-└── README.md                    # This file
+│       └── main.go                        # Server application entry point
+│
+├── internal/                               # Internal application code (not exported)
+│   ├── config/                            # Configuration management
+│   │   ├── config.go                     # Main configuration
+│   │   └── migrations.go                 # Migration configuration
+│   │
+│   ├── di/                                # Dependency Injection setup
+│   │   ├── container.go                  # Main DI container
+│   │   ├── providers.go                  # Core providers (DB, Config, etc.)
+│   │   └── modules/                      # Modular DI organization
+│   │       ├── module.go                # Module interface
+│   │       ├── registry.go              # Module registry
+│   │       ├── user_module.go           # User domain module
+│   │       └── product_module.example.go # Example for new domains
+│   │
+│   ├── handlers/                          # HTTP request handling layer
+│   │   ├── http/                         # HTTP-specific handlers
+│   │   │   ├── user_handler.go          # User HTTP handlers
+│   │   │   ├── dtos/                     # Data Transfer Objects
+│   │   │   │   └── user_response.go     # User response DTO
+│   │   │   ├── mappers/                  # Data mappers (Model ↔ DTO)
+│   │   │   │   └── user_mapper.go       # User mapper
+│   │   │   └── routes/                   # Route definitions
+│   │   │       ├── router.go            # Main router
+│   │   │       ├── user_routes.go       # User routes
+│   │   │       └── product_routes.example.go # Example routes
+│   │   │
+│   │   ├── response/                     # Response formatting layer
+│   │   │   └── response.go              # Response utilities & helpers
+│   │   │
+│   │   └── middleware/                   # HTTP middleware functions
+│   │       ├── logging.go               # Request/response logging
+│   │       ├── auth.go                  # Authorization checks
+│   │       ├── content_type.go          # Content-Type validation
+│   │       └── rate_limit.go            # Rate limiting
+│   │
+│   ├── models/                            # Domain models
+│   │   └── user.go                       # User domain model
+│   │
+│   ├── services/                          # Business logic layer
+│   │   └── service.go                    # Business logic implementations
+│   │
+│   └── repositories/                      # Data access layer (Repository pattern)
+│       ├── repository.go                 # Repository interfaces
+│       └── postgres/                      # PostgreSQL implementations
+│           └── user_repository.go        # User repository
+│
+├── pkg/                                    # Public packages (reusable utilities)
+│   ├── utils/                            # Utility functions
+│   │   ├── string.go                    # String utilities
+│   │   ├── errors.go                    # Error handling utilities
+│   │   ├── validation.go                # Input validation utilities
+│   │   └── pagination.go                # Pagination utilities
+│   ├── README.md                         # Package documentation
+│   └── UTILITIES_SUMMARY.md              # Utilities overview
+│
+├── tests/                                  # Test files
+│   ├── handler_user_test.go              # User handler tests
+│   ├── utils_validation_test.go          # Validation utility tests
+│   ├── utils_string_test.go              # String utility tests
+│   ├── utils_errors_test.go              # Error utility tests
+│   └── utils_pagination_test.go          # Pagination utility tests
+│
+├── migrations/                             # Database migrations
+│   ├── README.md                         # Migration guide
+│   ├── 001_create_users_table.up.sql    # Create users table (up)
+│   └── 001_create_users_table.down.sql  # Create users table (down)
+│
+├── docs/                                   # Documentation
+│   ├── ROUTES_ARCHITECTURE.md            # Routes layer documentation
+│   ├── MIDDLEWARE_GUIDE.md               # Middleware patterns guide
+│   ├── MIDDLEWARE_PATTERNS.md            # Common middleware patterns
+│   ├── MIDDLEWARE_FLOW_DIAGRAM.txt       # Middleware flow visualization
+│   ├── DI_ARCHITECTURE.md                # Dependency injection guide
+│   ├── ADD_NEW_MODULE.md                 # Adding new modules guide
+│   ├── MODULE_STRUCTURE.txt              # Module structure reference
+│   ├── MIGRATIONS_GUIDE.md               # Database migrations guide
+│   ├── MIGRATIONS_FLOW_DIAGRAM.txt       # Migrations flow visualization
+│   └── ROUTES_FLOW_DIAGRAM.txt           # Routes flow visualization
+│
+├── go.mod                                  # Go module definition
+├── go.sum                                  # Go dependencies checksums
+├── .env.example                            # Environment variables template
+├── .gitignore                              # Git ignore patterns
+├── README.md                               # This file
+├── QUICK_REFERENCE.md                      # Quick reference guide
+├── MODULAR_DI_SUMMARY.md                   # Modular DI overview
+├── MIDDLEWARE_QUICK_START.md               # Middleware quick start
+├── MIDDLEWARE_IMPLEMENTATION_SUMMARY.md    # Middleware implementation details
+├── MIGRATIONS_QUICK_START.md               # Migrations quick start
+├── MIGRATIONS_SUMMARY.md                   # Migrations overview
+├── ROUTES_DECOUPLING_SUMMARY.md            # Routes decoupling explanation
+└── TESTS_MIGRATION_SUMMARY.md              # Tests migration overview
 
 ```
 
