@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miladev95/golang-project-structure/internal/handlers/http/mappers"
 	"github.com/miladev95/golang-project-structure/internal/handlers/response"
 	"github.com/miladev95/golang-project-structure/internal/models"
 	"github.com/miladev95/golang-project-structure/internal/services"
@@ -27,7 +28,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 		response.ErrorInternalServer(c, err.Error())
 		return
 	}
-	response.SuccessOK(c, users)
+	response.SuccessOK(c, mappers.ToUserResponses(users))
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
@@ -43,7 +44,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessOK(c, user)
+	response.SuccessOK(c, mappers.ToUserResponse(user))
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
@@ -59,7 +60,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessCreated(c, createdUser)
+	response.SuccessCreated(c, mappers.ToUserResponse(createdUser))
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
@@ -81,7 +82,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessOKWithMessage(c, user, "User updated successfully")
+	response.SuccessOKWithMessage(c, mappers.ToUserResponse(&user), "User updated successfully")
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
